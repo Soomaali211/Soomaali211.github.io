@@ -1,10 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Blog</title>
+  <meta charset="UTF-8" />
+  <title>My Article Publisher</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f7f7f7; color: #222;}
+    header { background: #222; color: #fff; padding: 16px;}
+    .container { max-width: 700px; margin: 32px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.1);}
+    h1 { margin: 0 0 8px;}
+    h2 { margin-top: 32px;}
+    .article { border-bottom: 1px solid #eee; padding: 16px 0;}
+    .article:last-child { border-bottom: none;}
+    .article-title { font-size: 1.3em; margin: 0;}
+    .article-meta { font-size: 0.95em; color: #666; }
+    .btn { padding: 7px 16px; border: none; background: #222; color: #fff; border-radius: 4px; cursor: pointer;}
+    .btn.secondary { background: #555; }
+    form { margin: 32px 0;}
+    input[type="text"], textarea { width: 100%; max-width: 98%; padding: 7px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #ccc;}
+    textarea { min-height: 80px;}
+    @media (max-width: 480px) {
+      .container { padding: 10px;}
+    }
+  </style>
 </head>
 <body>
-  <h1>Ku soo dhawoow Blog-keyga</h1>
-  <p>Tani waa blog-kii ugu horeeyay ee aan sameeyo 🎉</p>
+  <header>
+    <h1>My Article Publisher</h1>
+  </header>
+  <div class="container" id="main-container">
+    <!-- Main content will be injected here -->
+  </div>
+<script>
+// Fake in-memory articles
+let articles = [
+  {
+    id: 1,
+    title: 'Welcome to My Publisher',
+    author: 'Admin',
+    content: 'This is a demo article. Add a new article using the form below!',
+    created: new Date('2024-01-01T10:00:00')
+  }
+];
+
+// Utility: escape HTML
+function esc(s) { return s.replace(/[&<>"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[t])) }
+
+function renderHome() {
+  let html = `
+    <h2>Articles</h2>
+    <div id="article-list">
+      ${articles.length === 0 ? '<p>No articles yet.</p>' : 
+        articles.map(a => `
+          <div class="article">
+            <a href="#article/${a.id}" class="article-title">${esc(a.title)}</a>
+            <div class="article-meta">by ${esc(a.author)} &middot; ${a.created.toLocaleString()}</div>
+          </div>
+        `).join('')}
+    </div>
+    <button class="btn" onclick="renderAddArticle()">+ Add New Article</button>
+  `;
+  document.getElementById('main-container').innerHTML = html;
+}
+
+function renderAddArticle() {
+  let html = `
+    <h2>Add Article</h2>
+    <form id="add-art-form" autocomplete="off">
+      <input type="text" name="title" required placeholder="Title" /><br />
+      <input type="text" name="author" required placeholder="Author" /><br />
+      <textarea name="content" required placeholder="Write your article here"></textarea><br />
+      <button class="btn" type="submit">Publish</button>
+      <button class="btn secondary" type="button" onclick="renderHome()">Cancel</button>
+    </form>
+  `;
+  document.getElementById('main-container').innerHTML = html;
+  document.getElementById('add-art-form').onsubmit = function(e) {
+    e.preventDefault();
+    const f = e.target;
+    articles.unshift({
+      id: articles.length ? articles[0].id+1 : 1,
+      title: f.title.value.trim(),
+      author: f.author.value.trim(),
+      content: f.content.value.trim(),
+      created: new Date()
+    });
+    location.hash = '';
+    renderHome();
+  }
+}
+
+function renderArticle(id) {
+  const art = articles.find(a => a.id === Number(id));
+  if (!art) {
+    renderHome();
+    return;
+  }
+  let html = `
+    <h2>${esc(art.title)}</h2>
+    <div class="article-meta">by ${esc(art.author)} &middot; ${art.created.toLocaleString()}</div>
+    <p>${esc(art.content).replace(/\n/g, '<br>')}</p>
+    <button class="btn secondary" onclick="window.history.back()">Back</button>
+  `;
+  document.getElementById('main-container').innerHTML = html;
+}
+
+// Simple client-side routing
+window.addEventListener('hashchange', route);
+function route() {
+  let h = location.hash.replace(/^#\/?/, '');
+  if (h.startsWith('article/')) {
+    renderArticle(h.split('/')[1]);
+  } else if (h === 'add') {
+    renderAddArticle();
+  } else {
+    renderHome();
+  }
+}
+route();
+</script>
 </body>
 </html>
